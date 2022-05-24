@@ -50,7 +50,7 @@ jobs:
         run: aptos -V
 
   macos_test_for_0_1_1:
-    runs-on: macos-latest
+    runs-on: macos-12
     defaults:
       run:
         shell: bash
