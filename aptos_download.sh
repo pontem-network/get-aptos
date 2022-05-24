@@ -83,7 +83,7 @@ if [[ $aptos_version == "latest" || $aptos_version == "new" || $aptos_version ==
         exit 5;
   fi
 else
-  if [ ! $(cat "$releases_path" | jq '.[] | select("${select_prerelease}" and .tag_name==\"${aptos_version}\") .tag_name') ]; then
+  if [ ! $(cat "$releases_path" | jq ".[] | select("${select_prerelease}" and .tag_name==\"${aptos_version}\") .tag_name") ]; then
     echo "{$aptos_version} The specified version of aptos was not found";
     exit 1;
   fi;
