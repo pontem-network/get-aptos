@@ -137,19 +137,19 @@ if [ ! -e $file_path ]; then
   unzip $file_path -d $aptosfolder
 fi
 
-echo "chmod 1755 $file_path"
+echo "chmod 1755 $unziped_file_path"
 chmod 1755 $unziped_file_path
 
-echo "create link $funziped_file_path"
+echo "create link $unziped_file_path"
 if [[ "$OSTYPE" == "linux-gnu"* || "$OSTYPE" == "freebsd"* || "$OSTYPE" == "cygwin" ]]; then
   mkdir -p $HOME/.local/bin
-  ln -sf "$funziped_file_path" $HOME/.local/bin/aptos
+  ln -sf "$unziped_file_path" $HOME/.local/bin/aptos
   echo "$HOME/.local/bin" >> $GITHUB_PATH
 elif [[ "$OSTYPE" == "darwin"* ]]; then
    ln -sf "$unziped_file_path" /usr/local/bin/aptos
 elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
 #   mkdir -p "$HOME/.local/bin"
-#   ln -sf "$file_path" "$HOME/.local/bin/aptos"
+#   ln -sf "$unziped_file_path" "$HOME/.local/bin/aptos"
 #   echo "$HOME/.local/bin" >> $GITHUB_PATH
   echo "Windows is not supported at the moment"
 else
@@ -159,5 +159,5 @@ fi
 # ======================================================================================================================
 # run
 # ======================================================================================================================
-echo "run: $file_path -V"
+echo "run: $unziped_file_path -V"
 $file_path -V
