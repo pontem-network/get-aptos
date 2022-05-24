@@ -77,13 +77,13 @@ elif [[ ! -z $1 ]]; then
 fi;
 if [[ $aptos_version == "latest" || $aptos_version == "new" || $aptos_version == "last" || -z $aptos_version ]]; then
   # Get the latest version
-  aptos_version=$(cat "$releases_path" | jq -r '.[] | select((${select_prerelease}) and (.tag_name | contains("cli"))) .tag_name' | head -n1);
+  aptos_version=$(cat "$releases_path" | jq -r '.[] | select(("${select_prerelease}") and (.tag_name | contains("cli"))) .tag_name' | head -n1);
   if [[ -z $aptos_version ]]; then
         echo "{$aptos_version|$APTOS_PRERELEASE} The specified version of aptos was not found";
         exit 5;
   fi
 else
-  if [ ! $(cat "$releases_path" | jq '.[] | select(${select_prerelease} and .tag_name==\"${aptos_version}\") .tag_name') ]; then
+  if [ ! $(cat "$releases_path" | jq '.[] | select("${select_prerelease}" and .tag_name==\"${aptos_version}\") .tag_name') ]; then
     echo "{$aptos_version} The specified version of aptos was not found";
     exit 1;
   fi;
@@ -108,11 +108,11 @@ asset_filename=$(echo $filename | sed 's/v//')
 file_path="$aptosfolder/$filename"
 unziped_file_path="$aptosfolder/aptos"
 
-download_url=$(cat "$releases_path" |
-  jq -r '.[] | select(${select_prerelease} and .tag_name==\"${aptos_version}\") .assets | .[] | select(.name|test(\"^${asset_filename}\")) | .browser_download_url')
+download_url=$(cat "$releases_path" | 
+    jq -r ".[] | select(${select_prerelease} and .tag_name==\"${aptos_version}\") .assets | .[] | select(.name|test(\"^${asset_filename}\")) | .browser_download_url")
 if [ -z $download_url ]; then
     download_url=$(cat "$releases_path" |
-      jq -r '.[] | select(${select_prerelease} and .tag_name==\"${aptos_version}\") .assets | .[] | select(.name|test(\"^${aptos_version}-${download_type}\")) | .browser_download_url')
+      jq -r ".[] | select("${select_prerelease}" and .tag_name==\"${aptos_version}\") .assets | .[] | select(.name|test(\"^${aptos_version}-${download_type}\")) | .browser_download_url")
   if [ -z $download_url ]; then
     echo "Releases \"${aptos_version}-${download_type}\" not found"
     exit 3
@@ -134,11 +134,11 @@ if [ ! -e $file_path ]; then
       -s $download_url
   fi
   mv "$file_path.tmp" $file_path
-  unzip $file_path
+  unzip $file_path -d $aptosfolder
 fi
 
 echo "chmod 1755 $file_path"
-chmod 1755 $funziped_file_path
+chmod 1755 $unziped_file_path
 
 echo "create link $funziped_file_path"
 if [[ "$OSTYPE" == "linux-gnu"* || "$OSTYPE" == "freebsd"* || "$OSTYPE" == "cygwin" ]]; then
@@ -146,7 +146,7 @@ if [[ "$OSTYPE" == "linux-gnu"* || "$OSTYPE" == "freebsd"* || "$OSTYPE" == "cygw
   ln -sf "$funziped_file_path" $HOME/.local/bin/aptos
   echo "$HOME/.local/bin" >> $GITHUB_PATH
 elif [[ "$OSTYPE" == "darwin"* ]]; then
-   ln -sf "$funziped_file_path" /usr/local/bin/aptos
+   ln -sf "$unziped_file_path" /usr/local/bin/aptos
 elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
 #   mkdir -p "$HOME/.local/bin"
 #   ln -sf "$file_path" "$HOME/.local/bin/aptos"
