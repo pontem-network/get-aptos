@@ -112,7 +112,7 @@ download_url=$(cat "$releases_path" |
     jq -r ".[] | select(${select_prerelease} and .tag_name==\"${aptos_version}\") .assets | .[] | select(.name|test(\"^${asset_filename}\")) | .browser_download_url")
 if [ -z $download_url ]; then
     download_url=$(cat "$releases_path" |
-      jq -r ".[] | select("${select_prerelease}" and .tag_name==\"${aptos_version}\") .assets | .[] | select(.name|test(\"^${aptos_version}-${download_type}\")) | .browser_download_url")
+      jq -r ".[] | select(${select_prerelease} and .tag_name==\"${aptos_version}\") .assets | .[] | select(.name|test(\"^${aptos_version}-${download_type}\")) | .browser_download_url")
   if [ -z $download_url ]; then
     echo "Releases \"${aptos_version}-${download_type}\" not found"
     exit 3
