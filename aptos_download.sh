@@ -39,7 +39,7 @@ if [ ! -e $releases_path ] || [ $(($(date "+%s")-$(date -r $releases_path "+%s" 
   mv "$releases_path.tmp" $releases_path;
 fi;
 # check release.json
-message=$(jq ".message?" -r $releases_path);
+message=$(jq '.message?' -r $releases_path);
 if [[ ! -z $message ]]; then
   echo "Message: $message";
   rm $releases_path;
@@ -77,13 +77,13 @@ elif [[ ! -z $1 ]]; then
 fi;
 if [[ $aptos_version == "latest" || $aptos_version == "new" || $aptos_version == "last" || -z $aptos_version ]]; then
   # Get the latest version
-  aptos_version=$(cat "$releases_path" | jq -r ".[] | select((${select_prerelease}) and (.tag_name | contains("cli"))) .tag_name" | head -n1);
+  aptos_version=$(cat "$releases_path" | jq -r '.[] | select((${select_prerelease}) and (.tag_name | contains("cli"))) .tag_name' | head -n1);
   if [[ -z $aptos_version ]]; then
         echo "{$aptos_version|$APTOS_PRERELEASE} The specified version of aptos was not found";
         exit 5;
   fi
 else
-  if [ ! $(cat "$releases_path" | jq ".[] | select(${select_prerelease} and .tag_name==\"${aptos_version}\") .tag_name") ]; then
+  if [ ! $(cat "$releases_path" | jq '.[] | select(${select_prerelease} and .tag_name==\"${aptos_version}\") .tag_name') ]; then
     echo "{$aptos_version} The specified version of aptos was not found";
     exit 1;
   fi;
@@ -109,10 +109,10 @@ file_path="$aptosfolder/$filename"
 unziped_file_path="$aptosfolder/aptos"
 
 download_url=$(cat "$releases_path" |
-  jq -r ".[] | select(${select_prerelease} and .tag_name==\"${aptos_version}\") .assets | .[] | select(.name|test(\"^${asset_filename}\")) | .browser_download_url")
+  jq -r '.[] | select(${select_prerelease} and .tag_name==\"${aptos_version}\") .assets | .[] | select(.name|test(\"^${asset_filename}\")) | .browser_download_url')
 if [ -z $download_url ]; then
     download_url=$(cat "$releases_path" |
-      jq -r ".[] | select(${select_prerelease} and .tag_name==\"${aptos_version}\") .assets | .[] | select(.name|test(\"^${aptos_version}-${download_type}\")) | .browser_download_url")
+      jq -r '.[] | select(${select_prerelease} and .tag_name==\"${aptos_version}\") .assets | .[] | select(.name|test(\"^${aptos_version}-${download_type}\")) | .browser_download_url')
   if [ -z $download_url ]; then
     echo "Releases \"${aptos_version}-${download_type}\" not found"
     exit 3
