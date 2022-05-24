@@ -1,0 +1,66 @@
+name: Test action
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  tests:
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: true
+      matrix:
+        os:
+          - macos-latest
+          - ubuntu-latest
+          # TODO: return windows back when it supported
+          # - windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.aptos
+          key: ${{ runner.os }}-aptos
+
+      - name: download latest version
+        uses: ./
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: test
+        run: aptos -V
+      # TODO: Fix when there is a clear versioning and naming system for releases
+      - name: download 0.1.1 version
+        uses: ./
+        with:
+          version: aptos-cli-v0.1.1
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: test
+        run: aptos -V
+      - name: download prerelease
+        uses: ./
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          prerelease: "true"
+      - name: test
+        run: aptos -V
+
+  macos_test_for_0_1_1:
+    runs-on: macos-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: download 0.1.1 version
+        uses: ./
+        with:
+          version: aptos-cli-v0.1.1
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: test
+        run: aptos -V

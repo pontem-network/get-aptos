@@ -1,0 +1,37 @@
+name: Test bash file
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  tests:
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: true
+      matrix:
+        os:
+          - macos-latest
+          - ubuntu-latest
+          # TODO: return windows back when it supported
+          # - windows-latest
+    steps:
+      - name: Cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.aptos
+          key: ${{ runner.os }}-aptos
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: download latest version
+        run: bash ./aptos_download.sh "" ${{ secrets.GITHUB_TOKEN }}
+      - name: test
+        run: aptos -V
+      - name: download 0.1.1 version
+        run: bash ./aptos_download.sh aptos-cli-v0.1.1 ${{ secrets.GITHUB_TOKEN }}
+      - name: test
+        run: aptos -V
