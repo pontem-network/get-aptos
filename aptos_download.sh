@@ -78,7 +78,8 @@ fi;
 if [[ $aptos_version == "latest" || $aptos_version == "new" || $aptos_version == "last" || -z $aptos_version ]]; then
   # Get the latest version
   # !! Temporary fix due to Aptos not using the same standard release names and versions every time
-  aptos_version="aptos-cli-v0.1.2"
+  aptos_version="aptos-cli-v0.1.2";
+  version_tag=$(cat "$releases_path" | jq -r '.[] | select(("${select_prerelease}") and (.tag_name | contains("cli"))) .tag_name' | head -n1);
   # aptos_version=$(cat "$releases_path" | jq -r '.[] | select(("${select_prerelease}") and (.tag_name | contains("cli"))) .tag_name' | head -n1);
   # if [[ -z $aptos_version ]]; then
   #       echo "{$aptos_version|$APTOS_PRERELEASE} The specified version of aptos was not found";
@@ -110,8 +111,13 @@ asset_filename=$(echo $filename | sed 's/v//')
 file_path="$aptosfolder/$filename"
 unziped_file_path="$aptosfolder/aptos"
 
-download_url=$(cat "$releases_path" | 
-    jq -r ".[] | select(${select_prerelease} and .tag_name==\"${aptos_version}\") .assets | .[] | select(.name|test(\"^${asset_filename}\")) | .browser_download_url")
+if [[ -z $version_tag ]]; then
+    download_url=$(cat "$releases_path" | 
+      jq -r ".[] | select(${select_prerelease} and .tag_name==\"${aptos_version}\") .assets | .[] | select(.name|test(\"^${asset_filename}\")) | .browser_download_url")
+else
+    download_url=$(cat "$releases_path" | 
+      jq -r ".[] | select(${select_prerelease} and .tag_name==\"${version_tag}\") .assets | .[] | select(.name|test(\"^${asset_filename}\")) | .browser_download_url")
+fi
 if [ -z $download_url ]; then
     download_url=$(cat "$releases_path" |
       jq -r ".[] | select(${select_prerelease} and .tag_name==\"${aptos_version}\") .assets | .[] | select(.name|test(\"^${aptos_version}-${download_type}\")) | .browser_download_url")
