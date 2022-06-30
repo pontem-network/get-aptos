@@ -78,10 +78,10 @@ fi;
 if [[ $aptos_version == "latest" || $aptos_version == "new" || $aptos_version == "last" || -z $aptos_version ]]; then
   # Get the latest version
   # !! Temporary fix due to Aptos not using the same standard release names and versions every time
-  aptos_version="aptos-cli-v0.1.2";
-  version_tag="aptos-cli-devnet-2022-06-09"
-  #version_tag=$(cat "$releases_path" | jq -r '.[] | select(("${select_prerelease}") and (.tag_name | contains("cli"))) .tag_name' | head -n1);
-  # aptos_version=$(cat "$releases_path" | jq -r '.[] | select(("${select_prerelease}") and (.tag_name | contains("cli"))) .tag_name' | head -n1);
+  # aptos_version="aptos-cli-v0.1.2";
+  # version_tag="aptos-cli-devnet-2022-06-09"
+  # version_tag=$(cat "$releases_path" | jq -r '.[] | select(("${select_prerelease}") and (.tag_name | contains("cli"))) .tag_name' | head -n1);
+  aptos_version=$(cat "$releases_path" | jq -r '.[] | select(("${select_prerelease}") and (.tag_name | contains("cli"))) .tag_name' | head -n1);
   # if [[ -z $aptos_version ]]; then
   #       echo "{$aptos_version|$APTOS_PRERELEASE} The specified version of aptos was not found";
   #       exit 5;
