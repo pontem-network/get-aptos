@@ -81,8 +81,7 @@ if [[ $aptos_version == "latest" || $aptos_version == "new" || $aptos_version ==
   # aptos_version="aptos-cli-v0.1.2";
   # version_tag="aptos-cli-devnet-2022-06-09"
   # version_tag=$(cat "$releases_path" | jq -r '.[] | select(("${select_prerelease}") and (.tag_name | contains("cli"))) .tag_name' | head -n1);
-  # this is fix for v0.3.1 
-  aptos_version=aptos-$(cat "$releases_path" | jq -r '.[] | select(("${select_prerelease}") and (.tag_name | contains("cli"))) .tag_name' | head -n1);
+  aptos_version=$(cat "$releases_path" | jq -r '.[] | select(("${select_prerelease}") and (.tag_name | contains("cli"))) .tag_name' | head -n1);
   # if [[ -z $aptos_version ]]; then
   #       echo "{$aptos_version|$APTOS_PRERELEASE} The specified version of aptos was not found";
   #       exit 5;
@@ -109,7 +108,8 @@ fi
 # Download
 # ======================================================================================================================
 filename="${aptos_version}-${download_type}.zip"
-asset_filename=$(echo $filename | sed 's/v//')
+# this is fix for v0.3.1 
+asset_filename=aptos-$(echo $filename | sed 's/v//')
 file_path="$aptosfolder/$filename"
 unziped_file_path="$aptosfolder/aptos"
 
