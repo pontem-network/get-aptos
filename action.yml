@@ -18,7 +18,7 @@ inputs:
     required: false
   prover:
     default: "false"
-    description: Installs or updates Move prover tools (z3, cvc5, dotnet, boogie)
+    description: Installs Move prover tools (z3, cvc5, dotnet, boogie)
     required: false
 runs:
   using: "composite"

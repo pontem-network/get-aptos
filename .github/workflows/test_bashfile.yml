@@ -28,9 +28,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: download latest version
-        uses: ./
-        with:
-          prover: "true"
         run: bash ./aptos_download.sh "" ${{ secrets.GITHUB_TOKEN }}
       - name: test
         run: aptos -V

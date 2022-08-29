@@ -196,6 +196,7 @@ function update_path_and_profile {
   DOTNET_ROOT="$HOME/.dotnet"
   BIN_DIR="$HOME/bin"
 
+  mkdir -p "${BIN_DIR}"
   add_to_profile "export DOTNET_ROOT=\"${DOTNET_ROOT}\""
   add_to_profile "export PATH=\"${DOTNET_ROOT}/tools:\$PATH\""
   add_to_profile "export Z3_EXE=\"${BIN_DIR}/z3\""
