@@ -69,5 +69,6 @@ jobs:
       # - name: test
       #   run: aptos -V
       - name: Install Move prover tools
+        uses: ./
         with:
           prover: "true"
