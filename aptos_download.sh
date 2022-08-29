@@ -108,8 +108,9 @@ fi
 # Download
 # ======================================================================================================================
 filename="${aptos_version}-${download_type}.zip"
-# this is fix for v0.3.1 
-asset_filename=$(echo $filename | sed 's/v//')
+# this is fix for v0.3.1a(v0.3.2) 
+#asset_filename=$(echo $filename | sed 's/v//')
+asset_filename="aptos-cli-0.3.2-${download_type}"
 file_path="$aptosfolder/$filename"
 unziped_file_path="$aptosfolder/aptos"
 
