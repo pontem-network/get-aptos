@@ -31,7 +31,10 @@ jobs:
         run: bash ./aptos_download.sh "" ${{ secrets.GITHUB_TOKEN }}
       - name: test
         run: aptos -V
-      - name: download 0.1.1 version
-        run: bash ./aptos_download.sh aptos-cli-v0.1.1 ${{ secrets.GITHUB_TOKEN }}
-      - name: test
-        run: aptos -V
+      # - name: download 0.1.1 version
+      #   run: bash ./aptos_download.sh aptos-cli-v0.1.1 ${{ secrets.GITHUB_TOKEN }}
+      # - name: test
+      #   run: aptos -V
+      - name: Install Move prover tools
+        with:
+          prover: "true"

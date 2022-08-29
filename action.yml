@@ -16,6 +16,10 @@ inputs:
     default: "false"
     description: Allow pre-release. False by default.
     required: false
+  prover:
+    default: "false"
+    description: Installs or updates Move prover tools (z3, cvc5, dotnet, boogie)
+    required: false
 runs:
   using: "composite"
   steps:
@@ -27,3 +31,4 @@ runs:
         APTOS_VERSION: ${{inputs.version}}
         APTOS_PRERELEASE: ${{inputs.prerelease}}
         SECRET_TOKEN: ${{inputs.token}}
+        PROVER: ${{inputs.prover}}

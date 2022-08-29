@@ -34,20 +34,24 @@ jobs:
       - name: test
         run: aptos -V
       # TODO: Fix when there is a clear versioning and naming system for releases
-      - name: download 0.1.1 version
+      # - name: download 0.1.1 version
+      #   uses: ./
+      #   with:
+      #     version: aptos-cli-v0.1.1
+      #     token: ${{ secrets.GITHUB_TOKEN }}
+      # - name: test
+      #   run: aptos -V
+      # - name: download prerelease
+      #   uses: ./
+      #   with:
+      #     token: ${{ secrets.GITHUB_TOKEN }}
+      #     prerelease: "true"
+      # - name: test
+      #   run: aptos -V
+      - name: Install Move prover tools
         uses: ./
         with:
-          version: aptos-cli-v0.1.1
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - name: test
-        run: aptos -V
-      - name: download prerelease
-        uses: ./
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          prerelease: "true"
-      - name: test
-        run: aptos -V
+          prover: "true"
 
   macos_test_for_0_1_1:
     runs-on: macos-12
@@ -57,10 +61,13 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: download 0.1.1 version
-        uses: ./
+      # - name: download 0.1.1 version
+      #   uses: ./
+      #   with:
+      #     version: aptos-cli-v0.1.1
+      #     token: ${{ secrets.GITHUB_TOKEN }}
+      # - name: test
+      #   run: aptos -V
+      - name: Install Move prover tools
         with:
-          version: aptos-cli-v0.1.1
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - name: test
-        run: aptos -V
+          prover: "true"
