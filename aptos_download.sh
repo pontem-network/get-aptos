@@ -109,7 +109,7 @@ fi
 # ======================================================================================================================
 filename="${aptos_version}-${download_type}.zip"
 # this is fix for v0.3.1 
-asset_filename=aptos-$(echo $filename | sed 's/v//')
+asset_filename=$(echo $filename | sed 's/v//')
 file_path="$aptosfolder/$filename"
 unziped_file_path="$aptosfolder/aptos"
 
