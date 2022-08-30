@@ -183,26 +183,14 @@ CVC5_VERSION=0.0.3
 DOTNET_VERSION=6.0
 BOOGIE_VERSION=2.15.7
 
-function add_to_profile {
-  eval "$1"
-  FOUND=$(grep -c "$1" < "${HOME}/.profile" || true)  # grep error return would kill the script.
-  if [ "$FOUND" == "0" ]; then
-    echo "$1" >> "${HOME}"/.profile
-  fi
-}
-
-function update_path_and_profile {
-  touch "${HOME}"/.profile
-
+function update_path {
   DOTNET_ROOT="$HOME/.dotnet"
   BIN_DIR="$HOME/bin"
-
   mkdir -p "${BIN_DIR}"
-  add_to_profile "export DOTNET_ROOT=\"${DOTNET_ROOT}\""
-  add_to_profile "export PATH=\"${DOTNET_ROOT}/tools:\$PATH\""
-  add_to_profile "export Z3_EXE=\"${BIN_DIR}/z3\""
-  add_to_profile "export CVC5_EXE=\"${BIN_DIR}/cvc5\""
-  add_to_profile "export BOOGIE_EXE=\"${DOTNET_ROOT}/tools/boogie\""
+  echo "PATH=${BIN_DIR}:$PATH" >> ${GITHUB_ENV}
+  echo "Z3_EXE=${BIN_DIR}/z3" >> ${GITHUB_ENV}
+  echo "CVC5_EXE=${BIN_DIR}/cvc5" >> ${GITHUB_ENV}
+  echo "BOOGIE_EXE=${DOTNET_ROOT}/tools/boogie" >> ${GITHUB_ENV}
 }
 
 function install_pkg {
@@ -234,46 +222,17 @@ function install_pkg {
 }
 
 function install_dotnet {
-  echo "Installing .Net"
-  mkdir -p "${DOTNET_INSTALL_DIR}" || true
-  if [[ $("${DOTNET_INSTALL_DIR}/dotnet" --list-sdks | grep -c "^${DOTNET_VERSION}" || true) == "0" ]]; then
-    if [[ "$(uname)" == "Linux" ]]; then
-        # Install various prerequisites for .dotnet. There are known bugs
-        # in the dotnet installer to warn even if they are present. We try
-        # to install anyway based on the warnings the dotnet installer creates.
-        if [ "$PACKAGE_MANAGER" == "apk" ]; then
-          install_pkg icu "$PACKAGE_MANAGER"
-          install_pkg zlib "$PACKAGE_MANAGER"
-          install_pkg libintl "$PACKAGE_MANAGER"
-          install_pkg libcurl "$PACKAGE_MANAGER"
-        elif [ "$PACKAGE_MANAGER" == "apt-get" ]; then
-          install_pkg gettext "$PACKAGE_MANAGER"
-          install_pkg zlib1g "$PACKAGE_MANAGER"
-        elif [ "$PACKAGE_MANAGER" == "yum" ] || [ "$PACKAGE_MANAGER" == "dnf" ]; then
-          install_pkg icu "$PACKAGE_MANAGER"
-          install_pkg zlib "$PACKAGE_MANAGER"
-        elif [ "$PACKAGE_MANAGER" == "pacman" ]; then
-          install_pkg icu "$PACKAGE_MANAGER"
-          install_pkg zlib "$PACKAGE_MANAGER"
-        fi
-    fi
-    # Below we need to (a) set TERM variable because the .net installer expects it and it is not set
-    # in some environments (b) use bash not sh because the installer uses bash features.
-    curl -sSL https://dot.net/v1/dotnet-install.sh \
-        | TERM=linux /bin/bash -s -- --channel $DOTNET_VERSION --install-dir "${DOTNET_INSTALL_DIR}" --version latest
-  else
-    echo Dotnet already installed.
-  fi
+    apt update
+    install_pkg gettext "$PACKAGE_MANAGER"
+    install_pkg zlib1g "$PACKAGE_MANAGER"
+    install_pkg dotnet-sdk-6.0 "$PACKAGE_MANAGER"
 }
 
 function install_boogie {
   echo "Installing boogie"
   mkdir -p "${DOTNET_INSTALL_DIR}tools/" || true
-  if [[ "$("${DOTNET_INSTALL_DIR}dotnet" tool list --tool-path "${DOTNET_INSTALL_DIR}tools/")" =~ .*boogie.*${BOOGIE_VERSION}.* ]]; then
-    echo "Boogie $BOOGIE_VERSION already installed"
-  else
-    "${DOTNET_INSTALL_DIR}dotnet" tool update --tool-path "${DOTNET_INSTALL_DIR}tools/" Boogie --version $BOOGIE_VERSION
-  fi
+  dotnet tool update --tool-path "${DOTNET_INSTALL_DIR}tools/" Boogie --version $BOOGIE_VERSION
+
 }
 
 function install_z3 {
@@ -369,8 +328,10 @@ else
 fi
 
 if [[ "$PROVER" == "true" ]]; then
-  update_path_and_profile
+  update_path
+  echo $GITHUB_ENV
   export DOTNET_INSTALL_DIR="${HOME}/.dotnet/"
+  export INSTALL_DIR="${HOME}/bin/"
   install_z3
   install_cvc5
   install_dotnet
