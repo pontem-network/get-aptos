@@ -171,6 +171,7 @@ fi
 echo "run: $unziped_file_path -V"
 #$unziped_file_path -V
 aptos -V
+aptos info
 
 # ======================================================================================================================
 # prover env
