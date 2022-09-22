@@ -128,6 +128,8 @@ if [ -z $download_url ]; then
   fi
 fi
 
+echo $file_path;
+
 if [ ! -e $file_path ]; then
   echo "Download: $download_url"
   if [ -z $SECRET_TOKEN ]; then
@@ -143,7 +145,7 @@ if [ ! -e $file_path ]; then
       -s $download_url
   fi
   mv -f "$file_path.tmp" $file_path
-  unzip -f $file_path -d $aptosfolder
+  unzip -o $file_path -d $aptosfolder
 fi
 
 echo "chmod 1755 $unziped_file_path"
