@@ -5,94 +5,94 @@
 # ======================================================================================================================
 aptosfolder="$HOME/.aptos"
 if [ ! -e $aptosfolder ]; then
-  echo "Create aptos folder: $aptosfolder";
-  mkdir -p $aptosfolder;
-fi;
+  echo "Create aptos folder: $aptosfolder"
+  mkdir -p $aptosfolder
+fi
 
 # ======================================================================================================================
 # Token
 # ======================================================================================================================
 if [[ -z $SECRET_TOKEN ]]; then
-  SECRET_TOKEN="";
+  SECRET_TOKEN=""
   if [[ ! -z $2 ]]; then
-    SECRET_TOKEN=$2;
-  fi;
-fi;
+    SECRET_TOKEN=$2
+  fi
+fi
 if [[ ! -z $SECRET_TOKEN ]]; then
-  echo "Token: ***";
-fi;
+  echo "Token: ***"
+fi
 
 # ======================================================================================================================
 # releases.json
 # ======================================================================================================================
-releases_path="$aptosfolder/releases.json";
-if [ ! -e $releases_path ] || [ $(($(date "+%s")-$(date -r $releases_path "+%s" ))) -ge 600 ]; then
-  echo "Download: releases.json";
+releases_path="$aptosfolder/releases.json"
+if [ ! -e $releases_path ] || [ $(($(date "+%s") - $(date -r $releases_path "+%s"))) -ge 600 ]; then
+  echo "Download: releases.json"
   if [ -z $SECRET_TOKEN ]; then
     curl -o "$releases_path.tmp" \
-        -s https://api.github.com/repos/aptos-labs/aptos-core/releases;
+      -s https://api.github.com/repos/aptos-labs/aptos-core/releases
   else
     curl -o "$releases_path.tmp" \
-        -H "Authorization: Bearer ${SECRET_TOKEN}" \
-        -s https://api.github.com/repos/aptos-labs/aptos-core/releases;
-  fi;
-  mv "$releases_path.tmp" $releases_path;
-fi;
+      -H "Authorization: Bearer ${SECRET_TOKEN}" \
+      -s https://api.github.com/repos/aptos-labs/aptos-core/releases
+  fi
+  mv "$releases_path.tmp" $releases_path
+fi
 # check release.json
-message=$(jq '.message?' -r $releases_path);
+message=$(jq '.message?' -r $releases_path)
 if [[ ! -z $message ]]; then
-  echo "Message: $message";
-  rm $releases_path;
-  exit 4;
+  echo "Message: $message"
+  rm $releases_path
+  exit 4
 fi
 
 # ======================================================================================================================
 # pre-release (prerelease=true)
 # ======================================================================================================================
 if [[ -z $APTOS_PRERELEASE ]]; then
-  APTOS_PRERELEASE="false";
+  APTOS_PRERELEASE="false"
   if [[ ! -z $3 ]]; then
-    APTOS_PRERELEASE=$3;
-  fi;
+    APTOS_PRERELEASE=$3
+  fi
 else
   if [ $APTOS_PRERELEASE != "true" ] && [ $APTOS_PRERELEASE != "false" ]; then
-    APTOS_PRERELEASE="false";
-  fi;
-fi;
-echo "Pre-release: $APTOS_PRERELEASE";
-select_prerelease="";
+    APTOS_PRERELEASE="false"
+  fi
+fi
+echo "Pre-release: $APTOS_PRERELEASE"
+select_prerelease=""
 if [ $APTOS_PRERELEASE == "false" ]; then
-  select_prerelease=".prerelease==false";
+  select_prerelease=".prerelease==false"
 else
-  select_prerelease=".";
+  select_prerelease="."
 fi
 # ======================================================================================================================
 # Aptos version
 # ======================================================================================================================
 aptos_version=""
 if [[ ! -z $APTOS_VERSION ]]; then
-  aptos_version=$APTOS_VERSION;
+  aptos_version=$APTOS_VERSION
 elif [[ ! -z $1 ]]; then
-  aptos_version=$1;
-fi;
+  aptos_version=$1
+fi
 if [[ $aptos_version == "latest" || $aptos_version == "new" || $aptos_version == "last" || -z $aptos_version ]]; then
   # Get the latest version
   # !! Temporary fix due to Aptos not using the same standard release names and versions every time
   # aptos_version="aptos-cli-v0.1.2";
   # version_tag="aptos-cli-devnet-2022-06-09"
   # version_tag=$(cat "$releases_path" | jq -r '.[] | select(("${select_prerelease}") and (.tag_name | contains("cli"))) .tag_name' | head -n1);
-  aptos_version=$(cat "$releases_path" | jq -r '.[] | select(("${select_prerelease}") and (.tag_name | contains("cli"))) .tag_name' | head -n1);
+  aptos_version=$(cat "$releases_path" | jq -r '.[] | select(("${select_prerelease}") and (.tag_name | contains("cli"))) .tag_name' | head -n1)
   # if [[ -z $aptos_version ]]; then
   #       echo "{$aptos_version|$APTOS_PRERELEASE} The specified version of aptos was not found";
   #       exit 5;
   #fi
 else
   if [ ! $(cat "$releases_path" | jq ".[] | select("${select_prerelease}" and .tag_name==\"${aptos_version}\") .tag_name") ]; then
-    echo "{$aptos_version} The specified version of aptos was not found";
-    exit 1;
-  fi;
-fi;
-echo "version: $aptos_version";
+    echo "{$aptos_version} The specified version of aptos was not found"
+    exit 1
+  fi
+fi
+echo "version: $aptos_version"
 
 if [[ "$OSTYPE" == "linux-gnu"* || "$OSTYPE" == "freebsd"* || "$OSTYPE" == "cygwin" ]]; then
   download_type="Ubuntu-$HOSTTYPE"
@@ -107,28 +107,26 @@ fi
 # ======================================================================================================================
 # Download
 # ======================================================================================================================
-filename="${aptos_version}-${download_type}.zip" 
+filename="${aptos_version}-${download_type}.zip"
 asset_filename=$(echo $filename | sed 's/v//')
 file_path="$aptosfolder/$filename"
 unziped_file_path="$aptosfolder/aptos"
 
 if [[ -z $version_tag ]]; then
-    download_url=$(cat "$releases_path" | 
-      jq -r ".[] | select(${select_prerelease} and .tag_name==\"${aptos_version}\") .assets | .[] | select(.name|test(\"^${asset_filename}\")) | .browser_download_url")
+  download_url=$(cat "$releases_path" |
+    jq -r ".[] | select(${select_prerelease} and .tag_name==\"${aptos_version}\") .assets | .[] | select(.name|test(\"^${asset_filename}\")) | .browser_download_url")
 else
-    download_url=$(cat "$releases_path" | 
-      jq -r ".[] | select(${select_prerelease} and .tag_name==\"${version_tag}\") .assets | .[] | select(.name|test(\"^${asset_filename}\")) | .browser_download_url")
+  download_url=$(cat "$releases_path" |
+    jq -r ".[] | select(${select_prerelease} and .tag_name==\"${version_tag}\") .assets | .[] | select(.name|test(\"^${asset_filename}\")) | .browser_download_url")
 fi
 if [ -z $download_url ]; then
-    download_url=$(cat "$releases_path" |
-      jq -r ".[] | select(${select_prerelease} and .tag_name==\"${aptos_version}\") .assets | .[] | select(.name|test(\"^${aptos_version}-${download_type}\")) | .browser_download_url")
+  download_url=$(cat "$releases_path" |
+    jq -r ".[] | select(${select_prerelease} and .tag_name==\"${aptos_version}\") .assets | .[] | select(.name|test(\"^${aptos_version}-${download_type}\")) | .browser_download_url")
   if [ -z $download_url ]; then
     echo "Releases \"${aptos_version}-${download_type}\" not found"
     exit 3
   fi
 fi
-
-echo $file_path;
 
 if [ ! -e $file_path ]; then
   echo "Download: $download_url"
@@ -155,13 +153,13 @@ echo "create link $unziped_file_path"
 if [[ "$OSTYPE" == "linux-gnu"* || "$OSTYPE" == "freebsd"* || "$OSTYPE" == "cygwin" ]]; then
   mkdir -p $HOME/.local/bin
   ln -sf "$unziped_file_path" $HOME/.local/bin/aptos
-  echo "$HOME/.local/bin" >> $GITHUB_PATH
+  echo "$HOME/.local/bin" >>$GITHUB_PATH
 elif [[ "$OSTYPE" == "darwin"* ]]; then
-   ln -sf "$unziped_file_path" /usr/local/bin/aptos
+  ln -sf "$unziped_file_path" /usr/local/bin/aptos
 elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
-#   mkdir -p "$HOME/.local/bin"
-#   ln -sf "$unziped_file_path" "$HOME/.local/bin/aptos"
-#   echo "$HOME/.local/bin" >> $GITHUB_PATH
+  #   mkdir -p "$HOME/.local/bin"
+  #   ln -sf "$unziped_file_path" "$HOME/.local/bin/aptos"
+  #   echo "$HOME/.local/bin" >> $GITHUB_PATH
   echo "Windows is not supported at the moment"
 else
   echo "Unknown OS"
@@ -188,10 +186,10 @@ function update_path {
   DOTNET_ROOT="$HOME/.dotnet"
   BIN_DIR="$HOME/bin"
   mkdir -p "${BIN_DIR}"
-  echo "PATH=${BIN_DIR}:$PATH" >> ${GITHUB_ENV}
-  echo "Z3_EXE=${BIN_DIR}/z3" >> ${GITHUB_ENV}
-  echo "CVC5_EXE=${BIN_DIR}/cvc5" >> ${GITHUB_ENV}
-  echo "BOOGIE_EXE=${DOTNET_ROOT}/tools/boogie" >> ${GITHUB_ENV}
+  echo "PATH=${BIN_DIR}:$PATH" >>${GITHUB_ENV}
+  echo "Z3_EXE=${BIN_DIR}/z3" >>${GITHUB_ENV}
+  echo "CVC5_EXE=${BIN_DIR}/cvc5" >>${GITHUB_ENV}
+  echo "BOOGIE_EXE=${DOTNET_ROOT}/tools/boogie" >>${GITHUB_ENV}
 }
 
 function install_pkg {
@@ -223,10 +221,10 @@ function install_pkg {
 }
 
 function install_dotnet {
-    apt update
-    install_pkg gettext "$PACKAGE_MANAGER"
-    install_pkg zlib1g "$PACKAGE_MANAGER"
-    install_pkg dotnet-sdk-6.0 "$PACKAGE_MANAGER"
+  apt update
+  install_pkg gettext "$PACKAGE_MANAGER"
+  install_pkg zlib1g "$PACKAGE_MANAGER"
+  install_pkg dotnet-sdk-6.0 "$PACKAGE_MANAGER"
 }
 
 function install_boogie {
@@ -244,8 +242,8 @@ function install_z3 {
     echo "you may want to remove the shared instance to avoid version confusion"
   fi
   if command -v "${INSTALL_DIR}z3" &>/dev/null && [[ "$("${INSTALL_DIR}z3" --version || true)" =~ .*${Z3_VERSION}.* ]]; then
-     echo "Z3 ${Z3_VERSION} already installed"
-     return
+    echo "Z3 ${Z3_VERSION} already installed"
+    return
   fi
   if [[ "$(uname)" == "Linux" ]]; then
     Z3_PKG="z3-$Z3_VERSION-x64-glibc-2.31"
@@ -276,8 +274,8 @@ function install_cvc5 {
     echo "you may want to remove the shared instance to avoid version confusion"
   fi
   if command -v "${INSTALL_DIR}cvc5" &>/dev/null && [[ "$("${INSTALL_DIR}cvc5" --version || true)" =~ .*${CVC5_VERSION}.* ]]; then
-     echo "cvc5 ${CVC5_VERSION} already installed"
-     return
+    echo "cvc5 ${CVC5_VERSION} already installed"
+    return
   fi
   if [[ "$(uname)" == "Linux" ]]; then
     CVC5_PKG="cvc5-Linux"
@@ -301,31 +299,31 @@ function install_cvc5 {
 
 PACKAGE_MANAGER=
 if [[ "$(uname)" == "Linux" ]]; then
-	if command -v yum &> /dev/null; then
-		PACKAGE_MANAGER="yum"
-	elif command -v apt-get &> /dev/null; then
-		PACKAGE_MANAGER="apt-get"
-	elif command -v pacman &> /dev/null; then
-		PACKAGE_MANAGER="pacman"
+  if command -v yum &>/dev/null; then
+    PACKAGE_MANAGER="yum"
+  elif command -v apt-get &>/dev/null; then
+    PACKAGE_MANAGER="apt-get"
+  elif command -v pacman &>/dev/null; then
+    PACKAGE_MANAGER="pacman"
   elif command -v apk &>/dev/null; then
-		PACKAGE_MANAGER="apk"
+    PACKAGE_MANAGER="apk"
   elif command -v dnf &>/dev/null; then
     echo "WARNING: dnf package manager support is experimental"
     PACKAGE_MANAGER="dnf"
-	else
-		echo "Unable to find supported package manager (yum, apt-get, dnf, or pacman). Abort"
-		exit 1
-	fi
+  else
+    echo "Unable to find supported package manager (yum, apt-get, dnf, or pacman). Abort"
+    exit 1
+  fi
 elif [[ "$(uname)" == "Darwin" ]]; then
-	if command -v brew &>/dev/null; then
-		PACKAGE_MANAGER="brew"
-	else
-		echo "Missing package manager Homebrew (https://brew.sh/). Abort"
-		exit 1
-	fi
+  if command -v brew &>/dev/null; then
+    PACKAGE_MANAGER="brew"
+  else
+    echo "Missing package manager Homebrew (https://brew.sh/). Abort"
+    exit 1
+  fi
 else
-	echo "Unknown OS. Abort."
-	exit 1
+  echo "Unknown OS. Abort."
+  exit 1
 fi
 
 if [[ "$PROVER" == "true" ]]; then
