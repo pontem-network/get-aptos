@@ -142,8 +142,8 @@ if [ ! -e $file_path ]; then
       -o "$file_path.tmp" \
       -s $download_url
   fi
-  mv "$file_path.tmp" $file_path
-  unzip $file_path -d $aptosfolder
+  mv -f "$file_path.tmp" $file_path
+  unzip -f $file_path -d $aptosfolder
 fi
 
 echo "chmod 1755 $unziped_file_path"
