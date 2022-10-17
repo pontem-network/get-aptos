@@ -23,12 +23,13 @@ Download the latest version of aptos
 ```
 
 Download a specific version of aptos
+You can see all available versions [here](https://github.com/aptos-labs/aptos-core/releases?q=cli&expanded=true)
 
 ```yaml
 - name: get aptos
   uses: pontem-network/get-aptos@main
   with:
-    version: 0.1.1
+    version: aptos-cli-v0.3.9
 ```
 
 Allow downloading pre-releases
@@ -46,7 +47,7 @@ Download a specific version of aptos and token
 - name: get aptos
   uses: pontem-network/get-aptos@main
   with:
-    version: 0.1.1
+    version: aptos-cli-v0.3.9
     token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
