@@ -23,6 +23,7 @@ Download the latest version of aptos
 ```
 
 Download a specific version of aptos
+
 You can see all available versions [here](https://github.com/aptos-labs/aptos-core/releases?q=cli&expanded=true)
 
 ```yaml
