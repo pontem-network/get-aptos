@@ -32,9 +32,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: test
-        run: |
-          apt install -y openssl
-          aptos -V
+        run: aptos -V
       # TODO: Fix when there is a clear versioning and naming system for releases
       # - name: download 0.1.1 version
       #   uses: ./
