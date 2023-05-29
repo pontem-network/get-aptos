@@ -16,7 +16,7 @@ jobs:
       matrix:
         os:
           #- macos-12
-          - ubuntu-latest
+          - self-hosted
           # TODO: return windows back when it supported
           # - windows-latest
     steps:
