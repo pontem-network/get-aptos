@@ -95,7 +95,21 @@ fi
 echo "version: $aptos_version"
 
 if [[ "$OSTYPE" == "linux-gnu"* || "$OSTYPE" == "freebsd"* || "$OSTYPE" == "cygwin" ]]; then
-  download_type="Ubuntu-$HOSTTYPE"
+  base_download_type="Ubuntu-$HOSTTYPE"
+
+  # Check if the release has this asset
+  asset_check=$(cat "$releases_path" | jq -r ".[] | select(${select_prerelease} and .tag_name==\"${aptos_version}\") .assets | .[] | select(.name|test(\"^${aptos_version}-${base_download_type}\")) | .name")
+
+  if [[ -z "$asset_check" ]]; then
+    ubuntu_version=$(lsb_release -sr 2>/dev/null || echo "")
+    if [[ -n "$ubuntu_version" ]]; then
+      download_type="Ubuntu-${ubuntu_version}-$HOSTTYPE"
+    else
+      download_type=$base_download_type
+    fi
+  else
+    download_type=$base_download_type
+  fi
 elif [[ "$OSTYPE" == "darwin"* ]]; then
   download_type="MacOSX-$HOSTTYPE"
 elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
