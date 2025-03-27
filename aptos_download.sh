@@ -30,11 +30,11 @@ if [ ! -e $releases_path ] || [ $(($(date "+%s") - $(date -r $releases_path "+%s
   echo "Download: releases.json"
   if [ -z $SECRET_TOKEN ]; then
     curl -o "$releases_path.tmp" \
-      -s https://api.github.com/repos/aptos-labs/aptos-core/releases
+      -s https://api.github.com/repos/aptos-labs/aptos-core/releases?per_page=100
   else
     curl -o "$releases_path.tmp" \
       -H "Authorization: Bearer ${SECRET_TOKEN}" \
-      -s https://api.github.com/repos/aptos-labs/aptos-core/releases
+      -s https://api.github.com/repos/aptos-labs/aptos-core/releases?per_page=100
   fi
   mv "$releases_path.tmp" $releases_path
 fi
