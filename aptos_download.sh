@@ -196,6 +196,35 @@ CVC5_VERSION=0.0.3
 DOTNET_VERSION=6.0
 BOOGIE_VERSION=3.0.1
 
+PACKAGE_MANAGER=
+if [[ "$(uname)" == "Linux" ]]; then
+  if command -v yum &>/dev/null; then
+    PACKAGE_MANAGER="yum"
+  elif command -v apt-get &>/dev/null; then
+    PACKAGE_MANAGER="apt-get"
+  elif command -v pacman &>/dev/null; then
+    PACKAGE_MANAGER="pacman"
+  elif command -v apk &>/dev/null; then
+    PACKAGE_MANAGER="apk"
+  elif command -v dnf &>/dev/null; then
+    echo "WARNING: dnf package manager support is experimental"
+    PACKAGE_MANAGER="dnf"
+  else
+    echo "Unable to find supported package manager (yum, apt-get, dnf, or pacman). Abort"
+    exit 1
+  fi
+elif [[ "$(uname)" == "Darwin" ]]; then
+  if command -v brew &>/dev/null; then
+    PACKAGE_MANAGER="brew"
+  else
+    echo "Missing package manager Homebrew (https://brew.sh/). Abort"
+    exit 1
+  fi
+else
+  echo "Unknown OS. Abort."
+  exit 1
+fi
+
 function update_path {
   DOTNET_ROOT="$HOME/.dotnet"
   BIN_DIR="$HOME/bin"
@@ -235,7 +264,14 @@ function install_pkg {
 }
 
 function install_dotnet {
-  apt update
+  if [ "$PACKAGE_MANAGER" = "apt-get" ]; then
+    wget https://packages.microsoft.com/config/ubuntu/22.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
+    sudo dpkg -i packages-microsoft-prod.deb
+    sudo apt-get update
+    sudo apt-get install apt-transport-https -y
+    sudo apt-get update
+  fi
+
   install_pkg gettext "$PACKAGE_MANAGER"
   install_pkg zlib1g "$PACKAGE_MANAGER"
   install_pkg dotnet-sdk-6.0 "$PACKAGE_MANAGER"
@@ -310,35 +346,6 @@ function install_cvc5 {
   )
   rm -rf "$TMPFILE"
 }
-
-PACKAGE_MANAGER=
-if [[ "$(uname)" == "Linux" ]]; then
-  if command -v yum &>/dev/null; then
-    PACKAGE_MANAGER="yum"
-  elif command -v apt-get &>/dev/null; then
-    PACKAGE_MANAGER="apt-get"
-  elif command -v pacman &>/dev/null; then
-    PACKAGE_MANAGER="pacman"
-  elif command -v apk &>/dev/null; then
-    PACKAGE_MANAGER="apk"
-  elif command -v dnf &>/dev/null; then
-    echo "WARNING: dnf package manager support is experimental"
-    PACKAGE_MANAGER="dnf"
-  else
-    echo "Unable to find supported package manager (yum, apt-get, dnf, or pacman). Abort"
-    exit 1
-  fi
-elif [[ "$(uname)" == "Darwin" ]]; then
-  if command -v brew &>/dev/null; then
-    PACKAGE_MANAGER="brew"
-  else
-    echo "Missing package manager Homebrew (https://brew.sh/). Abort"
-    exit 1
-  fi
-else
-  echo "Unknown OS. Abort."
-  exit 1
-fi
 
 if [[ "$PROVER" == "true" ]]; then
   update_path
