@@ -194,7 +194,36 @@ aptos info
 Z3_VERSION=4.11.2
 CVC5_VERSION=0.0.3
 DOTNET_VERSION=6.0
-BOOGIE_VERSION=3.0.1
+BOOGIE_VERSION=3.2.4
+
+PACKAGE_MANAGER=
+if [[ "$(uname)" == "Linux" ]]; then
+  if command -v yum &>/dev/null; then
+    PACKAGE_MANAGER="yum"
+  elif command -v apt-get &>/dev/null; then
+    PACKAGE_MANAGER="apt-get"
+  elif command -v pacman &>/dev/null; then
+    PACKAGE_MANAGER="pacman"
+  elif command -v apk &>/dev/null; then
+    PACKAGE_MANAGER="apk"
+  elif command -v dnf &>/dev/null; then
+    echo "WARNING: dnf package manager support is experimental"
+    PACKAGE_MANAGER="dnf"
+  else
+    echo "Unable to find supported package manager (yum, apt-get, dnf, or pacman). Abort"
+    exit 1
+  fi
+elif [[ "$(uname)" == "Darwin" ]]; then
+  if command -v brew &>/dev/null; then
+    PACKAGE_MANAGER="brew"
+  else
+    echo "Missing package manager Homebrew (https://brew.sh/). Abort"
+    exit 1
+  fi
+else
+  echo "Unknown OS. Abort."
+  exit 1
+fi
 
 function update_path {
   DOTNET_ROOT="$HOME/.dotnet"
@@ -235,17 +264,49 @@ function install_pkg {
 }
 
 function install_dotnet {
-  apt update
-  install_pkg gettext "$PACKAGE_MANAGER"
-  install_pkg zlib1g "$PACKAGE_MANAGER"
-  install_pkg dotnet-sdk-6.0 "$PACKAGE_MANAGER"
+  echo "Installing .Net"
+  mkdir -p "${DOTNET_INSTALL_DIR}" || true
+  if [[ $("${DOTNET_INSTALL_DIR}/dotnet" --list-sdks | grep -c "^${DOTNET_VERSION}" || true) == "0" ]]; then
+    if [[ "$(uname)" == "Linux" ]]; then
+      # Install various prerequisites for .dotnet. There are known bugs
+      # in the dotnet installer to warn even if they are present. We try
+      # to install anyway based on the warnings the dotnet installer creates.
+      if [ "$PACKAGE_MANAGER" == "apk" ]; then
+        install_pkg icu "$PACKAGE_MANAGER"
+        install_pkg zlib "$PACKAGE_MANAGER"
+        install_pkg libintl "$PACKAGE_MANAGER"
+        install_pkg libcurl "$PACKAGE_MANAGER"
+      elif [ "$PACKAGE_MANAGER" == "apt-get" ]; then
+        install_pkg gettext "$PACKAGE_MANAGER"
+        install_pkg zlib1g "$PACKAGE_MANAGER"
+      elif [ "$PACKAGE_MANAGER" == "yum" ] || [ "$PACKAGE_MANAGER" == "dnf" ]; then
+        install_pkg icu "$PACKAGE_MANAGER"
+        install_pkg zlib "$PACKAGE_MANAGER"
+      elif [ "$PACKAGE_MANAGER" == "pacman" ]; then
+        install_pkg icu "$PACKAGE_MANAGER"
+        install_pkg zlib "$PACKAGE_MANAGER"
+      fi
+    fi
+    # Below we need to (a) set TERM variable because the .net installer expects it and it is not set
+    # in some environments (b) use bash not sh because the installer uses bash features.
+    # NOTE: use wget to better follow the redirect
+    wget --tries 10 --retry-connrefused --waitretry=5 https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh
+    chmod +x dotnet-install.sh
+    ./dotnet-install.sh --channel $DOTNET_VERSION --install-dir "${DOTNET_INSTALL_DIR}" --version latest
+    rm dotnet-install.sh
+  else
+    echo Dotnet already installed.
+  fi
 }
 
 function install_boogie {
   echo "Installing boogie"
   mkdir -p "${DOTNET_INSTALL_DIR}tools/" || true
-  dotnet tool update --tool-path "${DOTNET_INSTALL_DIR}tools/" Boogie --version $BOOGIE_VERSION
-
+  if [[ "$("${DOTNET_INSTALL_DIR}dotnet" tool list --tool-path "${DOTNET_INSTALL_DIR}tools/")" =~ .*boogie.*${BOOGIE_VERSION}.* ]]; then
+    echo "Boogie $BOOGIE_VERSION already installed"
+  else
+    "${DOTNET_INSTALL_DIR}dotnet" tool update --tool-path "${DOTNET_INSTALL_DIR}tools/" Boogie --version $BOOGIE_VERSION
+  fi
 }
 
 function install_z3 {
@@ -310,35 +371,6 @@ function install_cvc5 {
   )
   rm -rf "$TMPFILE"
 }
-
-PACKAGE_MANAGER=
-if [[ "$(uname)" == "Linux" ]]; then
-  if command -v yum &>/dev/null; then
-    PACKAGE_MANAGER="yum"
-  elif command -v apt-get &>/dev/null; then
-    PACKAGE_MANAGER="apt-get"
-  elif command -v pacman &>/dev/null; then
-    PACKAGE_MANAGER="pacman"
-  elif command -v apk &>/dev/null; then
-    PACKAGE_MANAGER="apk"
-  elif command -v dnf &>/dev/null; then
-    echo "WARNING: dnf package manager support is experimental"
-    PACKAGE_MANAGER="dnf"
-  else
-    echo "Unable to find supported package manager (yum, apt-get, dnf, or pacman). Abort"
-    exit 1
-  fi
-elif [[ "$(uname)" == "Darwin" ]]; then
-  if command -v brew &>/dev/null; then
-    PACKAGE_MANAGER="brew"
-  else
-    echo "Missing package manager Homebrew (https://brew.sh/). Abort"
-    exit 1
-  fi
-else
-  echo "Unknown OS. Abort."
-  exit 1
-fi
 
 if [[ "$PROVER" == "true" ]]; then
   update_path
