@@ -194,7 +194,7 @@ aptos info
 Z3_VERSION=4.11.2
 CVC5_VERSION=0.0.3
 DOTNET_VERSION=6.0
-BOOGIE_VERSION=3.0.1
+BOOGIE_VERSION=3.2.4
 
 PACKAGE_MANAGER=
 if [[ "$(uname)" == "Linux" ]]; then
@@ -264,24 +264,49 @@ function install_pkg {
 }
 
 function install_dotnet {
-  if [ "$PACKAGE_MANAGER" = "apt-get" ]; then
-    wget https://packages.microsoft.com/config/ubuntu/22.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
-    sudo dpkg -i packages-microsoft-prod.deb
-    sudo apt-get update
-    sudo apt-get install apt-transport-https -y
-    sudo apt-get update
+  echo "Installing .Net"
+  mkdir -p "${DOTNET_INSTALL_DIR}" || true
+  if [[ $("${DOTNET_INSTALL_DIR}/dotnet" --list-sdks | grep -c "^${DOTNET_VERSION}" || true) == "0" ]]; then
+    if [[ "$(uname)" == "Linux" ]]; then
+      # Install various prerequisites for .dotnet. There are known bugs
+      # in the dotnet installer to warn even if they are present. We try
+      # to install anyway based on the warnings the dotnet installer creates.
+      if [ "$PACKAGE_MANAGER" == "apk" ]; then
+        install_pkg icu "$PACKAGE_MANAGER"
+        install_pkg zlib "$PACKAGE_MANAGER"
+        install_pkg libintl "$PACKAGE_MANAGER"
+        install_pkg libcurl "$PACKAGE_MANAGER"
+      elif [ "$PACKAGE_MANAGER" == "apt-get" ]; then
+        install_pkg gettext "$PACKAGE_MANAGER"
+        install_pkg zlib1g "$PACKAGE_MANAGER"
+      elif [ "$PACKAGE_MANAGER" == "yum" ] || [ "$PACKAGE_MANAGER" == "dnf" ]; then
+        install_pkg icu "$PACKAGE_MANAGER"
+        install_pkg zlib "$PACKAGE_MANAGER"
+      elif [ "$PACKAGE_MANAGER" == "pacman" ]; then
+        install_pkg icu "$PACKAGE_MANAGER"
+        install_pkg zlib "$PACKAGE_MANAGER"
+      fi
+    fi
+    # Below we need to (a) set TERM variable because the .net installer expects it and it is not set
+    # in some environments (b) use bash not sh because the installer uses bash features.
+    # NOTE: use wget to better follow the redirect
+    wget --tries 10 --retry-connrefused --waitretry=5 https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh
+    chmod +x dotnet-install.sh
+    ./dotnet-install.sh --channel $DOTNET_VERSION --install-dir "${DOTNET_INSTALL_DIR}" --version latest
+    rm dotnet-install.sh
+  else
+    echo Dotnet already installed.
   fi
-
-  install_pkg gettext "$PACKAGE_MANAGER"
-  install_pkg zlib1g "$PACKAGE_MANAGER"
-  install_pkg dotnet-sdk-6.0 "$PACKAGE_MANAGER"
 }
 
 function install_boogie {
   echo "Installing boogie"
   mkdir -p "${DOTNET_INSTALL_DIR}tools/" || true
-  dotnet tool update --tool-path "${DOTNET_INSTALL_DIR}tools/" Boogie --version $BOOGIE_VERSION
-
+  if [[ "$("${DOTNET_INSTALL_DIR}dotnet" tool list --tool-path "${DOTNET_INSTALL_DIR}tools/")" =~ .*boogie.*${BOOGIE_VERSION}.* ]]; then
+    echo "Boogie $BOOGIE_VERSION already installed"
+  else
+    "${DOTNET_INSTALL_DIR}dotnet" tool update --tool-path "${DOTNET_INSTALL_DIR}tools/" Boogie --version $BOOGIE_VERSION
+  fi
 }
 
 function install_z3 {
